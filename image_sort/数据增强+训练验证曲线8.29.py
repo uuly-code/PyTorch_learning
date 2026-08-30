@@ -3,6 +3,7 @@ import torch
 from torchvision import datasets,transforms
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
+from PIL import Image
 
 
 #训练集：允许随机变化
@@ -26,6 +27,7 @@ val_dataset=datasets.ImageFolder(root="image_dataset/val",transform=train_transf
 #ImageFolder是根据子文件名称确定类别
 
 """
+数据增强后的图片示例
 for i in range(6):
     image,label=dataset[0]
 
@@ -101,6 +103,8 @@ val_loss_history=[]
 train_acc_history=[]
 val_acc_history=[]
 
+best_val_loss=float("inf")
+
 #开始训练
 for epoch in range(1,101):
     model.train()
@@ -129,7 +133,7 @@ for epoch in range(1,101):
     val_loss=0
     val_correct=0
     val_total=0
-
+    #验证
     with torch.no_grad():
         for batch_images,batch_labels in val_loader:
             outputs=model(batch_images)
@@ -155,6 +159,12 @@ for epoch in range(1,101):
     train_acc_history.append(train_accuracy)
     val_acc_history.append(val_accuracy)
 
+    #判断当前模型是不是目前最好的
+    if average_val_loss<best_val_loss:
+        best_val_loss=average_val_loss
+        torch.save(model.state_dict(), "best_real_model.pth")
+        print("保存新的最佳模型，验证损失：",best_val_loss)
+
     if epoch%10==0:
 
         average_train_loss=train_loss/len(train_loader)
@@ -164,6 +174,38 @@ for epoch in range(1,101):
             "train_loss:",average_train_loss,"train_accuracy:",train_accuracy,"%",
             "val_loss:",average_val_loss,"val_accuracy:",val_accuracy,"%")
 
+#最后测试
+#使用刚保存的最佳模型
+model.load_state_dict(torch.load("best_real_model.pth", weights_only=True))
+model.eval()
+print("已加载最佳模型")
+
+#选择一张图片进行预测
+image_path= "../image_detect/detection_dataset/defect/defect_02.png"
+original_image=Image.open(image_path).convert("RGB")
+
+image_tensor=val_transform(original_image)
+print("处理后的形状：",image_tensor.shape)
+
+image_tensor=image_tensor.unsqueeze(0)
+print("加入批量维度：",image_tensor.shape)
+
+#开始预测
+with torch.no_grad():
+    outputs=model(image_tensor)
+    probabilities=torch.softmax(outputs,dim=1)
+    prediction=probabilities.argmax(dim=1).item()
+
+predicted_class=train_dataset.classes[prediction]
+confidence=probabilities[0,prediction].item()*100
+
+print("模型原始输出：",outputs)
+print("类别概率：",probabilities)
+print("预测类别：",predicted_class)
+print("置信度：",confidence)
+
+"""
+画图部分
 epochs=range(1,101)
 plt.figure(figsize=(10,4))
 
@@ -189,3 +231,5 @@ plt.legend()
 
 plt.tight_layout()
 plt.show()
+
+"""

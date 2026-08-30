@@ -100,11 +100,11 @@ for epoch in range(201):
 
         if val_accuracy > best_val_accuracy:
             best_val_accuracy = val_accuracy
-            torch.save(model.state_dict(),"best_model.pth")
+            torch.save(model.state_dict(), "best_model.pth")
             #model.state_dict()表示获取模型中已经学到的所有参数
             print("保存了新的最佳模型")
 
-model.load_state_dict(torch.load("best_model.pth",weights_only=True))
+model.load_state_dict(torch.load("best_model.pth", weights_only=True))
 #从best_model_pth文件读取之前保存的最佳参数，然后把这些参数装回当前模型，，weights_only=True表示只读取权重等模型参数
 print("已加载最佳模型")
 
