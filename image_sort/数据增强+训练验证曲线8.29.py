@@ -181,7 +181,7 @@ model.eval()
 print("已加载最佳模型")
 
 #选择一张图片进行预测
-image_path= "../image_detect/detection_dataset/defect/defect_02.png"
+image_path= "../image_detect/detection_dataset/images/defect_02.png"
 original_image=Image.open(image_path).convert("RGB")
 
 image_tensor=val_transform(original_image)

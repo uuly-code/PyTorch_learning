@@ -1,7 +1,7 @@
 from PIL import Image,ImageDraw
 import matplotlib.pyplot as plt
 
-image_path= "detection_dataset/defect/defect_01.png"
+image_path= "detection_dataset/images/defect_01.png"
 label_path= "detection_dataset/labels/defect_01.txt"
 
 image=Image.open(image_path).convert("RGB")
