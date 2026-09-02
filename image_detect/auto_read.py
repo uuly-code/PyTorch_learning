@@ -1,5 +1,6 @@
 import os
 import torch
+import random
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -69,6 +70,32 @@ class DefectDetectionDataset(Dataset):
 
                     labels.append(class_id)
 
+        if random.random()<0.5:  #50%的概率进行水平翻转
+
+            image=image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)#左右翻转图片
+
+            for box in boxes: #同步修改每个框的横坐标
+                old_x_min=box[0]
+                old_x_max=box[2]
+
+                box[0]=image_width-old_x_max
+                box[2]=image_width-old_x_min
+
+        target_width=640
+        target_height=640
+
+        #计算横向和纵向的缩放比例
+        scale_x=target_width/image_width
+        scale_y=target_height/image_height
+
+        #缩放图片
+        image=image.resize((target_width,target_height))
+
+        for box in boxes:  #同步缩放所有框
+            box[0]=box[0]*scale_x
+            box[1]=box[1]*scale_y
+            box[2]=box[2]*scale_x
+            box[3]=box[3]*scale_y
         #转换为PyTorch张量并返回
         boxes=torch.tensor(boxes,dtype=torch.float32).reshape(-1,4)
         labels=torch.tensor(labels,dtype=torch.int64)
@@ -84,6 +111,8 @@ def collate_fn(batch):
     for image,target in batch:
         images.append(image)
         targets.append(target)
+
+    images=torch.stack(images,dim=0)  #把同尺寸图片合成一个批量张量
 
     return images,targets
 
@@ -153,21 +182,22 @@ print("图片形状：",image.shape)
 print("缺陷框：",target["boxes"])
 print("类别编号：",target["labels"])
 """
-"""
+
 for images,targets in dataloader:
     print("这一批图片的数量：",len(images))
+    print("这一批图片的形状：",images.shape)
     print("这一批标签的数量：",len(targets))
 
-    print("第一张图片形状：",images[0].shape)
+    #print("第一张图片形状：",images[0].shape)
     print("第一张图片的框：",targets[0]["boxes"])
-    print("第一张图片形状：",targets[0]["labels"])
+    #print("第一张图片形状：",targets[0]["labels"])
 
-    print("第二张图片形状：",images[1].shape)
+    #print("第二张图片形状：",images[1].shape)
     print("第二张图片的框：",targets[1]["boxes"])
-    print("第二张图片形状：",targets[1]["labels"])
+    #print("第二张图片形状：",targets[1]["labels"])
 
     break
-"""
+
 
 for index in range(len(dataset)):
 
